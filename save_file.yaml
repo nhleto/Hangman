@@ -1,0 +1,23 @@
+--- !ruby/object:Game
+player1: Henry
+board: !ruby/object:Board
+  word: HOUND
+guessed:
+- '1'
+- A
+- E
+- I
+- O
+- U
+- P
+- F
+- B
+- C
+- L
+attempts: 11
+mode: 1
+answer: HOUND
+final: _OU__
+guesses: _____
+user_guess:
+- L
