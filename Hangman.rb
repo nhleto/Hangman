@@ -13,7 +13,7 @@ class Board
 end
 # the start of a game
 class Game
-  attr_reader :board, :guessed, :final, :answer, :user_guess, :player1, :swapped
+  attr_reader :board, :guessed, :final, :answer, :user_guess, :player1, :swapped, :letter
   def initialize(player1)
     @player1 = player1
     @board = Board.new
@@ -28,7 +28,7 @@ class Game
   def self.load_game
     save_file = File.open('save_file.yaml')
     @game = YAML.load(save_file)
-    puts "\nWelcome back, #{@player1}".cyan
+    puts "\nWelcome back!".cyan
     @game.game_play
   end
 
@@ -51,14 +51,21 @@ class Game
 
   def flipped_answer(user_guess)
     @final = board.word
-    @display_content.to_s
-
-    return unless user_guess.length == 1
-
-    @display_content.length.times do |index|
+    @display_content.to_s.length.times do |index|
       @display_content[index] = user_guess if @final[index].upcase == user_guess
     end
   end
+
+  # def iteratorion_parse(user_guess)
+  #   @display_content.to_s.length.times do |index|
+  #     @display_content[index] = user_guess if @final[index].upcase == user_guess
+  #     if @display_content[index] == @final[index]
+  #       p @display_content[index]
+  #       p @final[index]
+  #       @attempts -= 1 unless @attempts < 1
+  #     end
+  #   end
+  # end
 
   def guesses
     @guesses = @final
@@ -70,20 +77,28 @@ class Game
     player_guess
   end
 
+  def letter_include(user_guess)
+    user_guess.split.each do |letter|
+      if letter.include?('SAVE') || letter.include?('EXIT')
+        @attempts -= 1 unless @attempts.negative?
+      end
+    end
+  end
+
   def letters_guessed(user_guess)
     swapped = @guessed.size.times.select { |i| @guessed[i] == user_guess } != []
-    user_guess = user_guess.split
-    user_guess.each do |letter|
+    user_guess.split.each do |letter|
       @guessed << letter unless letter.include?('SAVE') || letter.include?('EXIT') || swapped == true
+      @attempts += 1
     end
     puts 'You have guessed:'
-    p @guessed unless @guessed == []
+    print @guessed.to_s.red unless @guessed == []
   end
 
   def win_con
-    return unless @user_guess == @final
+    return unless @user_guess == @final || @display_content == @final
 
-    puts "Nice Job! You guessed the word #{@final} in #{@attempts} attempts!".green
+    puts 'Nice Job! You guessed the word'.green + " #{@final} ".yellow + "in #{@attempts} attempts!".green
     exit
   end
 
@@ -112,16 +127,18 @@ class Game
   end
 
   def player_guess
-    while @attempts < 12
+    while @attempts < 12 && @attempts.positive?
       puts "\nThis is attempt ##{@attempts}".yellow
       puts "\n#{@display_content.chars.join(' ')}"
       @user_guess = gets.chomp.upcase
+
       error_check(@user_guess)
       letters_guessed(@user_guess)
+      letter_include(@user_guess)
       puts flipped_answer(@user_guess)
       save_option(@user_guess)
+      # iteratorion_parse(@user_guess)
       win_con
-      @attempts += 1
     end
     puts "\nSorry #{@player1}, the answer was #{@final}.".yellow
   end
